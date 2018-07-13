@@ -46,6 +46,7 @@
     send/2, winsz/3, which_children/0, kill/2, setpgid/2, stop/1, stop_and_wait/2,
     ospid/1, pid/1, status/1, signal/1, debug/1
 ]).
+-export_type([cmd/0, cmd_options/0, exec_options/0, ospid/0, osgid/0]).
 
 %% Internal exports
 -export([default/0, default/1]).
