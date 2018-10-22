@@ -76,7 +76,7 @@
 -type exec_option()  ::
       debug
     | {debug, integer()}
-    | root
+    | root | {root, boolean()}
     | verbose
     | {args, [string(), ...]}
     | {alarm, non_neg_integer()}
@@ -91,7 +91,7 @@
 %% <dt>debug</dt><dd>Same as {debug, 1}</dd>
 %% <dt>{debug, Level}</dt><dd>Enable port-programs debug trace at `Level'.</dd>
 %% <dt>verbose</dt><dd>Enable verbose prints of the Erlang process.</dd>
-%% <dt>root</dt><dd>Allow running child processes as root.</dd>
+%% <dt>root | {root, Boolean}</dt><dd>Allow running child processes as root.</dd>
 %% <dt>{args, Args}</dt><dd>Append `Args' to the port command.</dd>
 %% <dt>{alarm, Secs}</dt>
 %%     <dd>Give `Secs' deadline for the port program to clean up
@@ -680,9 +680,9 @@ init([Options]) ->
         _         -> error_logger:warning_msg(Msg, [])
         end,
         {ok, #state{port=Port, limit_users=Users, debug=Debug, registry=#{}, root=Root}}
-    catch _:Reason ->
+    catch _:Reason:StackTrace ->
         {stop, ?FMT("Error starting port '~s': ~200p\n  ~s\n",
-            [Exe, Reason, erlang:get_stacktrace()])}
+            [Exe, Reason, StackTrace])}
     end.
 
 
@@ -1180,7 +1180,9 @@ test_sync() ->
 
 
 test_winsz() ->
-    {ok, P, I} = exec:run(["/bin/bash", "-i", "-c", "echo started; read x; echo LINES=$(tput lines) COLUMNS=$(tput cols)"], [stdin, stdout, stderr, monitor, pty]),
+    {ok, P, I} = exec:run(
+        ["/bin/bash", "-i", "-c", "echo started; read x; echo LINES=$(tput lines) COLUMNS=$(tput cols)"],
+        [stdin, stdout, stderr, monitor, pty]),
     ?receiveMatch({stdout, I, <<"started\r\n">>}, 3000),
     ok = exec:winsz(I, 99, 88),
     ok = exec:send(I, <<"\n">>),
